@@ -20,27 +20,40 @@ while True:
             break
 
         if str(data).startswith("CONNECT"):
-            resp = "Successfully connected to {HOST} on port {PORT}"
+            resp = f"Successfully connected to {HOST} on port {PORT}"
             conn.send(resp.encode())
         elif str(data) == "LIST":
             dirList = os.listdir(os.getcwd())
             resp = "\n".join(dirList)
             conn.send(resp.encode())
-        elif str(data) == "QUIT":
-            break
+        elif str(data).startswith("RETRIEVE"):
+            filename = str(data).split()[1]
+            resp = f"Retrieving file '{filename}'"
+            conn.send(resp.encode())
+            server_file_path = os.path.join (os.getcwd(), filename)
+            try:
+                with open(filename, 'rb') as f:
+                    file_data = f.read()
+                conn.send(file_data)
+                print(f"File '{filename}' sent to client")
+            except FileNotFoundError:
+                print(f"Error: file '{filename}' not found")
+                resp = f"Error: file '{filename}' not found"
+                conn.send(resp.encode())
         elif str(data).startswith("STORE"):
             filename = str(data).split()[1]
             print(f"Receiving file '{filename}'")
-            server_file_path = os.path.join(os.getcwd(), "1"+filename)
+            server_file_path = os.path.join(os.getcwd(), filename)
             file_data = conn.recv(1024*1024)
             with open(server_file_path, 'wb') as f:
                 f.write(file_data)
             print(f"File '{filename}' saved on server with a path of {server_file_path}")
             resp = f"File '{filename}' saved on server."
             conn.send(resp.encode())
+        elif str(data) == "QUIT":
+            break
         else:
-            resp = "Nothing was done."
-        
+            resp = "Enter a command to interact with the server."
     except IOError:
         resp = "Error occurred. Terminating connection."
         conn.send(resp.encode())

@@ -17,6 +17,13 @@ while True:
             print("Invalid syntax.")
     elif message == "LIST":
         clientSocket.send(message.encode())
+    elif message.startswith("RETRIEVE"):
+        filename = message.split()[1]
+        clientSocket.send(message.encode())
+        data = clientSocket.recv(1024*1024)
+        with open (filename, 'wb') as f:
+            f.write(data)
+        print(f"File '{filename}' retrieved successfully with the following contents:")
     elif message.startswith("STORE"):
         filename = message.split()[1]
         try:
@@ -27,14 +34,13 @@ while True:
             print(f"File '{filename}' sent.")
         except FileNotFoundError:
             print(f"Error: File '{filename}' not found.")
-    
     elif message == "QUIT":
         clientSocket.send(message.encode())
         break
 
     data = clientSocket.recv(1024).decode()
     print(data)
-    if data.startswith("Error"):
-        break
+    # if data.startswith("Error"):
+    #     break
 print("FTP session has ended.")
 clientSocket.close()

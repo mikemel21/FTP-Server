@@ -19,21 +19,33 @@ while True:
         if not data:
             break
 
-        print(f"received {data}")
-
         if str(data).startswith("CONNECT"):
-            resp = "Successfully connected"
-        if str(data) == "LIST":
+            resp = "Successfully connected to {HOST} on port {PORT}"
+            conn.send(resp.encode())
+        elif str(data) == "LIST":
             dirList = os.listdir(os.getcwd())
             resp = "\n".join(dirList)
+            conn.send(resp.encode())
         elif str(data) == "QUIT":
             break
+        elif str(data).startswith("STORE"):
+            filename = str(data).split()[1]
+            print(f"Receiving file '{filename}'")
+            server_file_path = os.path.join(os.getcwd(), "1"+filename)
+            file_data = conn.recv(1024*1024)
+            with open(server_file_path, 'wb') as f:
+                f.write(file_data)
+            print(f"File '{filename}' saved on server with a path of {server_file_path}")
+            resp = f"File '{filename}' saved on server."
+            conn.send(resp.encode())
         else:
             resp = "Nothing was done."
-        conn.send(resp.encode())
+        
     except IOError:
         resp = "Error occurred. Terminating connection."
         conn.send(resp.encode())
         conn.close()
 print("Terminating connection")
 conn.close()
+
+

@@ -11,13 +11,23 @@ while True:
             HOST = args[1]
             PORT = int(args[2])
             clientSocket.connect((HOST, PORT))
-            print(f"You have successfully connected to {HOST} on port {PORT}")
 
             clientSocket.send(message.encode())
         else:
             print("Invalid syntax.")
     elif message == "LIST":
         clientSocket.send(message.encode())
+    elif message.startswith("STORE"):
+        filename = message.split()[1]
+        try:
+            with open(filename, 'rb') as f:
+                file_data = f.read()
+            clientSocket.send(message.encode())
+            clientSocket.send(file_data)
+            print(f"File '{filename}' sent.")
+        except FileNotFoundError:
+            print(f"Error: File '{filename}' not found.")
+    
     elif message == "QUIT":
         clientSocket.send(message.encode())
         break
@@ -26,6 +36,5 @@ while True:
     print(data)
     if data.startswith("Error"):
         break
-
 print("FTP session has ended.")
 clientSocket.close()
